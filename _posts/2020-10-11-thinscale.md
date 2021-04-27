@@ -7,7 +7,7 @@ author: "Maaz"
 
 - 3 raspberry pi zeros
 - [k3s](https://github.com/k3s-io/k3s) - lightweight k8s for IoT/ARM
-- ~[wireguard](https://github.com/k8sutils/wireguard-linux)~ [tailscale](https://github.com/k8sutils/tailscale) mesh vpn
+- ~wireguard~, instead a wireguard implementation: [tailscale](https://github.com/k8sutils/tailscale) mesh vpn
 
 
 ![img](https://i.ibb.co/wgG0tjv/32-D726-BA-D6-EB-4-A56-A000-44-E4-A4-CA1-AB6.jpg)
@@ -66,8 +66,7 @@ sudo tailscale up
 # notes
 - based on http://gist.github.com/maazghani/f605d993d878093c8be3c9decc1b6d4c
 - the standard 4096 dhrsa keys were causing high handshake times occasionally, switched to using ecdh keys with letsencrypt CA for smaller but safer keys
-- *if this was done for the corporate setup referred to above, the thinclient devices sent to employees could be as minimal as iPads but in order to feasibly distribute a means of asymmetric encryption, the overheard of maintaining tls certificates and a CA would be a nightmare, easier would be to leverage yubikey duo -- https://duo.com/docs/dng*
-This post is where you should start.
+- *if this was done for the corporate setup referred to above, the thinclient devices sent to employees could be as minimal as iPads but in order to feasibly distribute a means of asymmetric encryption, the overheard of maintaining tls certificates and a CA would be a nightmare, easier would be to leverage yubikey duo -- https://duo.com/docs/dng
 
 [site]: https://maaz.io
 [blog]:   https://blog.maaz.io
