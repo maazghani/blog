@@ -1,0 +1,93 @@
+---
+title: "thinscale: a thinclient setup using tailscale, k3s, rasbpi zeros"
+description: "A guide to creating a minimal, portable Kubernetes thin client using Raspberry Pi Zeros, Tailscale, and K3s."
+date: "2020-10-11"
+---
+
+import Callout from "@/components/Callout.astro";
+
+---
+
+## parts requests
+
+- 3 raspberry pi zeros
+- [k3s](https://github.com/k3s-io/k3s) - lightweight k8s for IoT/ARM
+- [tailscale](https://github.com/k8sutils/tailscale) mesh vpn instead of Wireguard
+
+![img](https://i.ibb.co/wgG0tjv/32-D726-BA-D6-EB-4-A56-A000-44-E4-A4-CA1-AB6.jpg)
+
+---
+
+## cluster initialization
+
+### download and install
+
+```bash
+curl -sfL https://get.k3s.io | sh -
+# Check for Ready node, 
+# takes maybe 30 seconds
+k3s kubectl get node
+```
+
+### setup nodes
+
+```bash
+K3S_TOKEN=SECRET k3s server --server https://masters-up
+```
+
+<Callout type="info">
+Source: <a href="https://rancher.com/docs/k3s/latest/en/installation/ha-embedded/" target="_blank">K3s HA Installation Guide</a>
+</Callout>
+
+---
+
+## plug A into B
+
+- Tailscale needs to be containerized to run in k8s.
+- Two options:
+  - Dockerize: [github.com/tailscale/tailscale](https://github.com/tailscale/tailscale)
+  - Or Dockerize steps below:
+
+```bash
+# Raspbian Buster (for Raspberry Pi)
+
+# Add Tailscale's GPG key
+curl https://pkgs.tailscale.com/unstable/raspbian/buster.gpg | sudo apt-key add -
+
+# Add the tailscale repository
+curl https://pkgs.tailscale.com/unstable/raspbian/buster.list | sudo tee /etc/apt/sources.list.d/tailscale.list
+
+# Install Tailscale
+sudo apt-get update && sudo apt-get install tailscale
+
+# Start Tailscale!
+sudo tailscale up
+```
+
+---
+
+## assemble
+
+- [Connect iPad Pro to Tailscale VPN](https://tailscale.com/kb/1020/install-ios)
+- [Install Blink Shell on iPad](https://blink.sh)
+- Use your own [k8sutils images](https://github.com/k8sutils/bash)
+
+---
+
+## y tho
+
+- Launch k8s pods with task-specific containers pre-configured with your credentials (dotfiles, SSH keys, CAs as k8s secrets).
+- Connect to your pod from any Tailscale device for a persistent shell session.
+- Optional: connect the cluster CNI to a corporate VPN (e.g., GlobalProtect) and isolate VPN usage to the pods themselves.
+- Enables a zero trust model, especially useful in WFH environments.
+
+---
+
+## notes
+
+- Based on [this gist](http://gist.github.com/maazghani/f605d993d878093c8be3c9decc1b6d4c)
+- Switched to ECDH keys with Let’s Encrypt CA due to handshake delays with 4096-bit DH keys.
+- For corp setups, distributing TLS infra would be too complex. Instead, use hardware tokens like [YubiKey with Duo](https://duo.com/docs/dng).
+- In this model, SSH access to pods becomes trivial and secure, making password/key management obsolete.
+
+---

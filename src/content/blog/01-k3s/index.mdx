@@ -1,0 +1,93 @@
+---
+title: "tailk3scale — mesh vpn for IoT run on IoT"
+description: "A lightweight Kubernetes and Tailscale VPN setup using Raspberry Pi for edge and IoT environments."
+date: "2025-05-29"
+---
+
+import Callout from "@/components/Callout.astro";
+
+---
+
+## stakeholders
+
+- [@maazghani](https://github.com/maazghani)
+
+---
+
+## parts requests
+
+- 3 raspberry pi 3b+/4/zero
+- [k3s](https://github.com/k3s-io/k3s) - lightweight k8s for IoT/ARM
+- [tailscale](https://tailscale.com) - software defined mesh VPN with private DNS built in
+
+![architecture](https://rancher.com/docs/img/rancher/k3s-architecture-single-server.png)
+
+---
+
+## cluster initialization
+
+### download and install
+
+```bash
+curl -sfL https://get.k3s.io | sh -
+# Check for Ready node, 
+# takes maybe 30 seconds
+k3s kubectl get node
+```
+
+### setup nodes
+
+```bash
+K3S_TOKEN=SECRET k3s server --server https://masters-up
+```
+
+<Callout type="info">
+Source: <a href="https://rancher.com/docs/k3s/latest/en/installation/ha-embedded/" target="_blank">K3s HA Installation Guide</a>
+</Callout>
+
+---
+
+## plug A into B
+
+- Tailscale is available as a binary for Raspbian, but we need to containerize it for k8s.
+- Two options:
+  - Dockerize: [github.com/tailscale/tailscale](https://github.com/tailscale/tailscale)
+  - Or Dockerize these steps:
+
+```bash
+# Raspbian Buster (for Raspberry Pi)
+
+# Add Tailscale's GPG key
+curl https://pkgs.tailscale.com/unstable/raspbian/buster.gpg | sudo apt-key add -
+
+# Add the tailscale repository
+curl https://pkgs.tailscale.com/unstable/raspbian/buster.list | sudo tee /etc/apt/sources.list.d/tailscale.list
+
+# Install Tailscale
+sudo apt-get update && sudo apt-get install tailscale
+
+# Start Tailscale!
+sudo tailscale up
+```
+
+---
+
+## assemble
+
+- Check out [Tailscale Dogcam](https://tailscale.com/kb/1076/dogcam) for project inspiration
+- Stress test Tailscale
+
+---
+
+## y tho
+
+Learn & POC:
+
+- Lightweight k8s
+- Mesh VPN to turn a home machine into a jump server
+- Turn iPad Pro into a thin client
+- Software-defined networks
+- Hardware maintenance
+- Evaluate ease of automating cluster management
+
+---
