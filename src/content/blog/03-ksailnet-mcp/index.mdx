@@ -6,12 +6,10 @@ date: "2025-7-27"
 
 import Callout from "@/components/Callout.astro";
 
----
-
-## Learning about MCPs 
+## 🔍 Learning about MCPs 
 I've heard much about [Model Context Protocol (MCP) Servers](https://modelcontextprotocol.io/overview), but had yet to truly understand what they were. As I love learning new technologies, the way I do this is jumping in to try them. 
 
-[Skip intro](#trying-out-githubcomcontainerskubernetes-mcp-server)
+[➡️ Skip intro](#trying-out-githubcomcontainerskubernetes-mcp-server)
 
 The MCP website describes MCP servers as:
 > AI-enabled tools are powerful, but they’re often limited to the information you manually provide or require bespoke integrations.
@@ -21,13 +19,16 @@ This initially seemed like something that Copilot was already able to do by its 
 
 I see it as the difference between writing a bash script of kubectl commands and then trying to use `sed` to parse out relevant bits of information to then use to complete complex/bulk operations, and writing a python script using the Kubernetes SDK. Yes you could probably achieve what you're trying to do with a behemoth bash script with a bunch of regex, and while that might work in the short term, you’re basically building a house outta duct tape—fragile, hard to maintain, and damn near unreadable six months from now. Python gives you structure, clarity, and actual error handling, not just a pile of `|| true` and `set -e`.
 
-##  [kubernetes-mcp-server by Containers](https://github.com/containers/kubernetes-mcp-server)
+## 🛠️ [kubernetes-mcp-server by Containers](https://github.com/containers/kubernetes-mcp-server)
 `kubernetes-mcp-server` is an implementation of a Kubernetes MCP server from the open source community, *Containers*, that built Podman, Buildah, Skopeo, etc. Some of the other implementations just wrapped `kubectl` commands which to me defeats the whole purpose of an MCP server. `kubernetes-mcp-server` is a native Go implementation that uses the same `k8s.io/apimachinery` Go pkgs that Kubernetes uses itself, so this made sense (also Go means no external dependencies, and unless you enjoy [yak shaving](https://softwareengineering.stackexchange.com/questions/388092/what-exactly-is-yak-shaving) with the nvm/venv hell, is a *no-brainer*). 
 
-## Trying it out with a local k3d cluster in a Github Codespace
+## 🧪 Trying it out with a local k3d cluster in a Github Codespace
+
+### 🔧 1. get yoself a k8s cluster
 
 My go to way of trying things out on Kubernetes is [ksailnet](https://blog.maazghani.com/projects/ksailnet) personal project based off of [Kubernetes-in-Codespaces by CSE Labs](https://github.com/cse-labs/kubernetes-in-codespaces) but with some of my custom tooling on top, and a bootstrapped monitoring stack. I dropped into a `ksailnet` Codespace, so if you would like to follow along you will need a local [k3d](https://k3d.io/stable/) cluster running and VSCode with Github Copilot setup. 
 
+### ⚙️ 2. initialize the kubernetes mcp server
 Next, I added this to my VSCode Settings via creating this file:
 ```
 # file: .vscode/mcp.json
@@ -45,18 +46,83 @@ Next, I added this to my VSCode Settings via creating this file:
 	"inputs": []
 }
 ```
-This tells vscode to download, install, and start the `kubernetes-mcp-server` node module. Once started, Github Copilot quickly tells me that it has discovered some new tools:
+This tells vscode to download, install, and start the `kubernetes-mcp-server` node module. The `kubernetes-mcp-server` uses the default kubeconfig so in this case authentication to the k3d cluster is already setup. Once started, Github Copilot quickly tells me that it has discovered some new tools:
 
-[!img](https://blog.maazghani.com/astro-sphere.jpg)
+![Screenshot](https://blog.maazghani.com/kubernetes-mcp-server-1.png)
 
+### ▶️ 3. run it
 
+To test it out I ask it to 
+> create a markdown file for a brief summary of what is running on this cluster, and provide a quick health summary, list all the mcp commands you use in the process
 
+This results in:
 
+![Screenshot2](https://blog.maaz.sh/kubernetes-mcp-server-2.png)
 
+And creates the following:
 
+> # k3d Cluster Summary
+> 
+> ## Cluster Info
+> - **Name**: k3d-k3s-default
+> - **Nodes**: 1 (k3d-k3s-default-server-0)
+> - **Age**: 97 minutes
+> - **Status**: ✅ Healthy
+> 
+> ## Namespaces (7)
+> - `default`, `kube-system`, `kube-public`, `kube-node-lease`
+> - `logging`, `monitoring`, `heartbeat`
+> 
+> ## Running Pods (7)
+> | Namespace | Pod | Status | Restarts |
+> |-----------|-----|--------|----------|
+> | kube-system | coredns | ✅ Running | 0 |
+> | kube-system | local-path-provisioner | ✅ Running | 0 |
+> | kube-system | metrics-server | ✅ Running | 0 |
+> | logging | fluentbit | ✅ Running | 0 |
+> | monitoring | prometheus-deployment | ✅ Running | 0 |
+> | monitoring | grafana | ✅ Running | 0 |
+> | heartbeat | heartbeat | ✅ Running | 0 |
+> 
+> ## Health Summary
+> - **All pods**: Running (7/7)
+> - **Restart count**: 0 across all pods
+> - **Recent events**: None
+> - **Status**: 🟢 **EXCELLENT** - Fully operational
+> 
+> ## MCP Commands Used
+> 1. `mcp_kubernetes-mc_configuration_view`
+> 2. `mcp_kubernetes-mc_namespaces_list`
+> 3. `mcp_kubernetes-mc_pods_list`
+> 4. `mcp_kubernetes-mc_events_list`
 
+As you can see in the screenshot, the LLM model is able to figure out when and what mcp commands to use, and its returned as json that it can easily interact with quickly. 
 
+## 🧯 Simple Troubleshooting Use Cases
+* *Developer*: Some use cases I can see this being helpful in is for developers working with an enterprise kubernetes cluster as their development environment being able to have Copilot troubleshoot their application pods. 
+* *Operator*: Another use case that I could see is a kubernetes cluster operator using this to troubleshoot cluster issues, from having Copilot run debug pods and running exec commands, to quickly identify root cause.
 
+## 🔁 Workflow Use Cases
+* *Developer*: A developer could write a workflow that rebuilds their application's docker image (ideally using a Docker MCP server) and pushes the image to their registry, and then updating their deployment on the cluster to use the new image tag, and then checking the logs of the pod to make sure it is running.
+    * Or even having Copilot add debug messages to their application, and then having Copilot deploy it and check the pod logs for the debug message; as part of an iterative agentic development workflow
+* *Operator*: For performing complex migration tasks that require running test workloads and verifying the health of said workloads. 
 
+## 🔮 Future
+I imagine a future where a JIRA ticket is created for a bug, assigning it to Copilot, and Copilot using a JIRA MCP server, Kubernetes MCP server, and Git MCP server to identify
+	* a JIRA MCP server to identify story acceptance criteria
+	* a Kubernetes MCP server to identify the issue and validate the fix
+	* a Git MCP server to commit a fix in a Pull Request
+	* ~A JIRA MCP server, Kubernetes MCP Server, and Git MCP server to validate the acceptance criteria and merg--~ lol maybe not yet
 
----
+As you can see the MCP server implementation possibilities are as endless as are AI real-world applications, but more to the point -- the importance of MCP servers in the future of AIs is massive. 
+Keep in mind I've focused on Github Copilot Chat use-cases because that is what is useful for me currently, but the real value is in AI-based automations. 
+In Cloud technology, there are already vendor-created MCP servers for:
+| Technology | MCP Server |
+|------------|-------------|
+| Terraform  | [terraform-mcp-server](https://github.com/hashicorp/terraform-mcp-server) |
+| AWS        | [aws-mcp-server](https://github.com/aws/aws-mcp-server) |
+| Azure      | [azure-mcp-server](https://github.com/Azure/azure-mcp-server) |
+
+See a full list (including Shopify, Notion): https://code.visualstudio.com/mcp
+
+On an unfortunate note, one of the technologies that I would love to see replaced by AI automation that leverages MCP servers to interact with Enterprise Applications would be *ServiceNow*, but with our luck, ServiceNow will bastardize even this technology into their umbrella of vendor lock-in hell. 
