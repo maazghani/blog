@@ -2,9 +2,14 @@
 title: "Interacting with Kubernetes Clusters from Copilot using a MCP Server"
 description: "Using a k3d cluster, I test out a kubernetes-mcp-server implementation with Github Copilot"
 date: "2025-7-27"
+tags:
+  - k3d
+  - kubernetes
+  - llm
+  - ai
+  - mcp
+  - copilot
 ---
-
-import Callout from "@/components/Callout.astro";
 
 ---
 
@@ -24,6 +29,7 @@ I see it as the difference between writing a bash script of kubectl commands and
 ## 🛠️ [kubernetes-mcp-server by Containers](https://github.com/containers/kubernetes-mcp-server)
 `kubernetes-mcp-server` is an implementation of a Kubernetes MCP server from the open source community, *Containers*, that built Podman, Buildah, Skopeo, etc. Some of the other implementations just wrapped `kubectl` commands which to me defeats the whole purpose of an MCP server. `kubernetes-mcp-server` is a native Go implementation that uses the same `k8s.io/apimachinery` Go pkgs that Kubernetes uses itself, so this made sense (also Go means no external dependencies, and unless you enjoy [yak shaving](https://softwareengineering.stackexchange.com/questions/388092/what-exactly-is-yak-shaving) with the nvm/venv hell, is a *no-brainer*). 
 
+---
 ## 🧪 Trying it out with a local k3d cluster in a Github Codespace
 
 ### 🔧 1. get yoself a k8s cluster
@@ -52,6 +58,7 @@ This tells vscode to download, install, and start the `kubernetes-mcp-server` no
 
 ![Screenshot](https://blog.maazghani.com/kubernetes-mcp-server-1.png)
 
+---
 ### ▶️ 3. run it
 
 To test it out I ask it to 
@@ -100,6 +107,7 @@ And creates the following:
 
 As you can see in the screenshot, the LLM model is able to figure out when and what mcp commands to use, and its returned as json that it can easily interact with quickly. 
 
+---
 ## 🧯 Simple Troubleshooting Use Cases
 * *Developer*: Some use cases I can see this being helpful in is for developers working with an enterprise kubernetes cluster as their development environment being able to have Copilot troubleshoot their application pods. 
 * *Operator*: Another use case that I could see is a kubernetes cluster operator using this to troubleshoot cluster issues, from having Copilot run debug pods and running exec commands, to quickly identify root cause.
@@ -109,6 +117,7 @@ As you can see in the screenshot, the LLM model is able to figure out when and w
     * Or even having Copilot add debug messages to their application, and then having Copilot deploy it and check the pod logs for the debug message; as part of an iterative agentic development workflow
 * *Operator*: For performing complex migration tasks that require running test workloads and verifying the health of said workloads. 
 
+---
 ## 🔮 Future
 I imagine a future where a JIRA ticket is created for a bug, assigning it to Copilot, and Copilot using a JIRA MCP server, Kubernetes MCP server, and Git MCP server to identify
 	* a JIRA MCP server to identify story acceptance criteria
@@ -128,5 +137,3 @@ In Cloud technology, there are already vendor-created MCP servers for:
 See a full list (including Shopify, Notion): https://code.visualstudio.com/mcp
 
 On an unfortunate note, one of the technologies that I would love to see replaced by AI automation that leverages MCP servers to interact with Enterprise Applications would be *ServiceNow*, but with our luck, ServiceNow will bastardize even this technology into their umbrella of vendor lock-in hell. 
-
----
