@@ -1,0 +1,41 @@
+---
+title: "Setting Up a Tailscale Exit Node for Apple TV"
+description: "Get around regional content blocking with a Tailscale Exit Node"
+date: "2025-9-28"
+tags:
+  - tailscale
+  - apple-tv
+  - exit-node
+  - vpn
+  - mlb
+---
+
+---
+
+## 🔍 y tho
+The Seattle Mariners games don't take part in the wider MLB network licensing so the only way to watch their games are to sign up for ROOT Sports, which is $14.99/mo. Having to pay for both a ROOT Sports subscription and a Prime Video MLB Subscription wouldn't be so bad if the ROOT Sports app wasn't atrocious on every platform. 
+In addition, whenever I travel to AirBnBs, I take my Apple TV with me, and YoutubeTV gets fussy about my location even for a weekend, and if I go to Canada, its Netflix or bust.
+
+On most weekends, I'm looking for a reason to use Tailscale and/or some side project, and what would be more overkill than setting up a Tailscale Exit Node on a VPS in another region to route my Apple TV traffic through?
+
+[➡️ Skip intro](#trying-out-githubcomcontainerskubernetes-mcp-server)
+
+## background
+[Tailscale](https://tailscale.com/) is one of my favorite tools to ever exist, as it uses Wireguard to create a mesh VPN between all your devices, and is as zero config as it gets. I use it to connect to my home network when I'm away, and also to connect to my home lab k3s cluster when I'm on the go.
+
+Exit nodes are network appliances that allow you to route your internet traffic through them. Tailscale allows you to designate any of your devices as an exit node, and then you can route your traffic through that device.
+
+## Pre-reqs
+* A DigitalOcean account (or any VPS provider, I just used DO because I had credits with ssh keys already setup)
+* A Tailscale account (I used the free tier)
+* An Apple TV (or firestick, etc) with the Tailscale app installed
+
+---
+## 🚀 getting started
+
+### 🔧 1. get yoself a an authkey
+
+To setup an exit node, you need to create an authkey from the Tailscale admin console. This is a one-time use key that you will use to authenticate your VPS to your Tailscale network.
+1. Go to the [Tailscale Admin Console](https://login.tailscale.com/admin)
+2. Click on "Keys" in the left sidebar
+3. Click on "Generate Key"
