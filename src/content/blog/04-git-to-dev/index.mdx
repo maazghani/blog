@@ -38,7 +38,7 @@ You don't have to guess and immediately follow a fuzzy URL. On the [git-to.dev](
 
 The application is built with the Next.js App Router and uses the GitHub REST API to discover possible owners and repositories. It scores the owner and repo as a pair—ranking exact, prefix, substring, and subsequence matches—then redirects to the strongest result while preserving any extra path segments.
 
-![Screenshot](https://blog.maaz.sh/git-to-dev.png)
+![Screenshot](/git-to-dev.png)
 
 The fun part is that the resolver works in both directions: it can expand a fuzzy path such as `oai/cx`, but it can also search for the shortest path that still resolves unambiguously to a specific repository. Results are cached to reduce GitHub API calls, and adding `?preview=1` lets you inspect a match before following the redirect.
 
