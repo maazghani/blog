@@ -15,10 +15,10 @@ tags:
 ## github.com/owner/repo
 Most of the time you can find a repo just by assuming what it's path might be, for example, you know Codex is created by OpenAI, so right now instead of Googling for `"codex github"` you may just browse to `"github.com/openai/codex"` and end up in the right place. 
 
-## Use Case A: {CODEX FILL SHORT TITLE}  
+## Use Case A: Shorter, readable GitHub links  
 With [git-to.dev](https://github.com/maazghani/git-to.dev) you can just go to [git-to.dev/openai/codex](https://github.com/openai/codex) and end up in the right place, with a shorter url. 
 
-## Use Case B: {CODEX FILL SHORT TITLE}
+## Use Case B: Fuzzy URL shortening
 Instead of putting this URL in a tinyURL to shorten it, and end up with an obscure URL that could end up anywhere, you can also just infer the shortest URL by trying `https://git-to.dev/oai/cx`, and since the repo with the most stars that most closely matches the unique chars `oai/cx` is github.com/openai/codex it will automatically redirect there. URL Shortening without a URL shortener. 
 
 ## How Matching Works
@@ -31,15 +31,16 @@ Instead of putting this URL in a tinyURL to shorten it, and end up with an obscu
 ---
 ## 🧪 Technical Details
 
-### 🔧 {CODEX FILL TITLE}
+### 🔧 A fuzzy resolver built on Next.js and GitHub
 
-{CODEX FILL TWO-SENTENCE BRIEF TECHNICAL EXPLANATION OF DESIGN OF APPLICATION}
+The application is built with the Next.js App Router and uses the GitHub REST API to discover possible owners and repositories. It scores the owner and repo as a pair—ranking exact, prefix, substring, and subsequence matches—then redirects to the strongest result while preserving any extra path segments.
 
 ![Screenshot](https://blog.maaz.sh/git-to-dev.png)
 
-{CODEX FILL SOME INTERESTING DETAIL ABOUT THIS PROJECT}
+The fun part is that the resolver works in both directions: it can expand a fuzzy path such as `oai/cx`, but it can also search for the shortest path that still resolves unambiguously to a specific repository. Results are cached to reduce GitHub API calls, and adding `?preview=1` lets you inspect a match before following the redirect.
 
 ---
 ## 🔮 Future
 
-{CODEX PUT TWO BULLET POINTS ABOUT WHAT FEATURES COULD BE ADDED TO THIS OR OTHER USE-CASES}
+- Add browser and editor extensions that generate the shortest `git-to.dev` link directly from the GitHub page you are viewing.
+- Support links to issues, pull requests, releases, and files while preserving the same fuzzy owner/repository matching.
