@@ -1,0 +1,221 @@
+---
+title: "Setting Up a Tailscale Exit Node for Apple TV"
+description: "Route an Apple TV through a tiny VPS with Tailscale"
+date: "2025-9-28"
+tags:
+  - tailscale
+  - apple-tv
+  - exit-node
+  - vpn
+  - mlb
+---
+
+---
+
+## 🔍 y tho
+
+Seattle Mariners games are subject to local broadcast restrictions, so watching them usually means adding a ROOT Sports subscription on top of whatever other baseball subscription I already have. That would be easier to swallow if the ROOT Sports app wasn't atrocious on every platform.
+
+I also take my Apple TV with me when I stay at Airbnbs. YouTube TV gets fussy about location changes, and crossing into Canada makes the catalog situation even more entertaining.
+
+On most weekends I'm looking for an excuse to use Tailscale or build some unnecessary side project. What could be more appropriately overkill than putting a Tailscale exit node on a tiny VPS and routing the Apple TV through it?
+
+This does not magically override a streaming service's rules. Providers can use account location, device location, payment region, or VPN detection in addition to an IP address, so check the terms for the service you use.
+
+[➡️ Skip intro](#getting-started)
+
+## background
+
+[Tailscale](https://tailscale.com/) uses WireGuard to create a mesh VPN between your devices with almost no configuration. I already use it to reach my home network and homelab k3s cluster while I'm away.
+
+Normally Tailscale only routes traffic between devices in your tailnet. An [exit node](https://tailscale.com/docs/features/exit-nodes) is a device that can also carry your regular internet traffic. Select that node on the Apple TV and websites see the VPS's public IP address instead of the address of the Wi-Fi network the Apple TV is actually using.
+
+The path ends up looking like this:
+
+```text
+Apple TV -> encrypted Tailscale tunnel -> VPS -> internet
+```
+
+## pre-reqs
+
+- A VPS account. I used DigitalOcean because I already had credits and SSH keys set up.
+- A [Tailscale](https://login.tailscale.com/start) account. The free Personal plan is enough for this.
+- An Apple TV running tvOS 17 or later with the [Tailscale app](https://tailscale.com/docs/install/appletv) installed.
+- An SSH key for logging in to the VPS.
+
+---
+
+## 🚀 getting started
+
+### 🌎 1. create a VPS in the region you need
+
+Create the smallest Ubuntu droplet your provider offers. The exit node is only forwarding packets, so this does not need much CPU or memory. Pick the datacenter region whose public IP location you actually want to use, add your SSH key, and give the server an obvious name such as `tailscale-exit-nyc`.
+
+On DigitalOcean I used:
+
+- Ubuntu LTS
+- The smallest Basic shared-CPU plan
+- SSH-key authentication
+- A datacenter outside my normal viewing region
+
+Copy the new server's public IPv4 address and connect to it:
+
+```bash
+ssh root@YOUR_SERVER_IP
+```
+
+If you expose SSH to the internet, restrict port 22 to your own source IP with the provider's cloud firewall. Once Tailscale is working, another option is to administer the box only over its Tailscale address.
+
+### 🔑 2. create a one-time Tailscale auth key
+
+The VPS needs to join the same tailnet as the Apple TV. You can authenticate interactively with a browser URL, but an [auth key](https://tailscale.com/docs/features/access-control/auth-keys) is convenient for a headless server:
+
+1. Open the [Keys page](https://login.tailscale.com/admin/settings/keys) in the Tailscale admin console.
+2. Select **Generate auth key**.
+3. Leave **Reusable** and **Ephemeral** off. This server only needs a single-use, non-ephemeral key.
+4. If your tailnet uses device approval, enable **Pre-approved** or approve the machine after it joins.
+5. Copy the key; Tailscale only displays it once.
+
+Treat the key like a password. Do not paste a real key into dotfiles, screenshots, git, or a blog post.
+
+### 📦 3. install Tailscale on the VPS
+
+On the VPS, install the stable Linux client:
+
+```bash
+curl -fsSL https://tailscale.com/install.sh | sh
+```
+
+Read the script first or use Tailscale's distribution-specific package instructions if piping a downloaded script into a shell makes you itchy.
+
+Put the one-time key in an environment variable so it does not get recorded directly in shell history, then bring the node up:
+
+```bash
+read -rsp "Tailscale auth key: " TS_EXIT_AUTH_KEY && echo
+sudo tailscale up \
+  --auth-key="$TS_EXIT_AUTH_KEY" \
+  --hostname=tailscale-exit-nyc
+unset TS_EXIT_AUTH_KEY
+```
+
+Confirm that it joined the tailnet:
+
+```bash
+tailscale status
+tailscale ip -4
+```
+
+You should also see the server on the [Machines page](https://login.tailscale.com/admin/machines).
+
+### ↪️ 4. enable IP forwarding
+
+A Linux exit node needs permission from the kernel to forward IPv4 and IPv6 packets. Make that setting persistent and apply it:
+
+```bash
+printf '%s\n' \
+  'net.ipv4.ip_forward = 1' \
+  'net.ipv6.conf.all.forwarding = 1' \
+  | sudo tee /etc/sysctl.d/99-tailscale.conf
+
+sudo sysctl -p /etc/sysctl.d/99-tailscale.conf
+```
+
+Both values should print as `1`. Tailscale handles the routing and source NAT, so there is no need to hand-roll a pile of iptables rules.
+
+### 📣 5. advertise the server as an exit node
+
+Tell Tailscale that this machine is willing to carry default-route traffic:
+
+```bash
+sudo tailscale set --advertise-exit-node
+```
+
+Advertising is only half of the setup. In the Tailscale admin console:
+
+1. Open the [Machines page](https://login.tailscale.com/admin/machines).
+2. Find `tailscale-exit-nyc` and open its `...` menu.
+3. Select **Edit route settings**.
+4. Enable **Use as exit node** and save.
+
+By default, members of a tailnet can use approved exit nodes. If you replaced Tailscale's default access policy, make sure your policy grants the Apple TV access to `autogroup:internet`.
+
+For a box intended to stay online, I also disable key expiry from the machine's `...` menu. That trades some security for avoiding a surprise re-authentication later, so only do it for a VPS you control and remove the machine from Tailscale when you destroy it.
+
+### 📺 6. connect the Apple TV
+
+On the Apple TV:
+
+1. Install **Tailscale** from the App Store.
+2. Open it, select **Install VPN Configuration**, and allow the configuration.
+3. Select **Connect**.
+4. Scan the QR code with a phone that can sign in to your tailnet.
+5. Open **Exit Node** and choose `tailscale-exit-nyc`.
+
+The selected exit node turns blue in the tvOS app. If it does not appear, verify that the server is online, is advertising itself, and has been approved as an exit node in the admin console.
+
+### ✅ 7. verify the route
+
+Before opening a streaming app, use an Apple TV browser or an IP-checking app/site to inspect the public IP. It should match the VPS's public IP and geolocate near the datacenter you selected.
+
+You can compare from the server itself:
+
+```bash
+curl https://ifconfig.me
+```
+
+If the addresses match, the Apple TV's internet traffic is leaving through the VPS. If a specific service still reports the old region, restart that app and remember that IP location may be only one of the signals it uses.
+
+---
+
+## 🧯 troubleshooting
+
+### the exit node does not show up on Apple TV
+
+- Run `tailscale status` on the VPS and confirm it is connected.
+- Run `sudo tailscale set --advertise-exit-node` again.
+- Check **Machines -> Edit route settings -> Use as exit node** in the admin console.
+- Confirm the Apple TV and VPS are signed in to the same tailnet.
+- If you use a custom Tailscale access policy, grant access to `autogroup:internet`.
+
+### selecting the node kills internet access
+
+Check forwarding first:
+
+```bash
+sysctl net.ipv4.ip_forward
+sysctl net.ipv6.conf.all.forwarding
+```
+
+If either value is `0`, repeat the forwarding step. Also check whether `ufw`, `firewalld`, or the VPS provider's firewall is blocking forwarded traffic. Tailscale notes that `firewalld` configurations may need masquerading enabled.
+
+### playback is slow or buffers
+
+Every byte now travels from the Apple TV to the VPS and then to the streaming provider. Choose a region with reasonable latency, check the VPS's bandwidth allowance, and use Tailscale's device details to see whether the connection is direct or relayed. A tiny VM has plenty of compute for this, but physics and provider bandwidth limits still exist.
+
+### a streaming service still blocks playback
+
+First confirm the public IP actually changed. If it did, the service may be using its own home-area settings, device location, account region, or a list of datacenter/VPN addresses. An exit node changes the route; it is not a guarantee that every provider will accept that location.
+
+---
+
+## 🧹 turning it off
+
+On Apple TV, open **Tailscale -> Exit Node** and select **Disable** or **None**. Traffic will immediately go back through the current local network.
+
+When the experiment is over:
+
+1. Destroy the VPS so it stops billing.
+2. Remove the machine from the Tailscale admin console.
+3. Revoke any auth key that is still valid.
+
+The nice part is that the Apple TV configuration stays simple. I can keep several approved exit nodes in different regions and switch between them from the couch, which is exactly the kind of absurd infrastructure project I wanted from a weekend.
+
+---
+
+## references
+
+- [Tailscale: Exit nodes](https://tailscale.com/docs/features/exit-nodes)
+- [Tailscale: Install on Apple TV](https://tailscale.com/docs/install/appletv)
+- [Tailscale: Install on Linux](https://tailscale.com/docs/install/linux)
+- [Tailscale: Auth keys](https://tailscale.com/docs/features/access-control/auth-keys)
+- [Tailscale: Enable IP forwarding](https://tailscale.com/kb/1104/enable-ip-forwarding)
