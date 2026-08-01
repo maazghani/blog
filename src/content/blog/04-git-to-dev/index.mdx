@@ -1,0 +1,45 @@
+---
+title: "Introducing git-to.dev: search github via shortened URLs"
+description: "Fuzzy expander and searcher for Github URLs"
+date: "2026-8-01"
+tags:
+  - vercel
+  - github
+  - nextjs
+  - ai
+  - redirect
+---
+
+---
+
+## github.com/owner/repo
+Most of the time you can find a repo just by assuming what it's path might be, for example, you know Codex is created by OpenAI, so right now instead of Googling for `"codex github"` you may just browse to `"github.com/openai/codex"` and end up in the right place. 
+
+## Use Case A: {CODEX FILL SHORT TITLE}  
+With [git-to.dev](https://github.com/maazghani/git-to.dev) you can just go to [git-to.dev/openai/codex](https://github.com/openai/codex) and end up in the right place, with a shorter url. 
+
+## Use Case B: {CODEX FILL SHORT TITLE}
+Instead of putting this URL in a tinyURL to shorten it, and end up with an obscure URL that could end up anywhere, you can also just infer the shortest URL by trying `https://git-to.dev/oai/cx`, and since the repo with the most stars that most closely matches the unique chars `oai/cx` is github.com/openai/codex it will automatically redirect there. URL Shortening without a URL shortener. 
+
+## How Matching Works
+
+1. Owners first. Candidates come from an exact login lookup, GitHub's user index, and a cached pool of the most-starred owners.
+2. Whole pairs are scored. Both halves are matched together, so a weaker-looking owner still wins when it holds the tighter repo match.
+3. Tightest, then shortest. Match quality ranks first, then fewest total characters. Stars only break an exact tie.
+4. Extra segments pass through. /maaz/ks/tree/main lands on that branch, and ?preview=1 shows the resolution instead of redirecting.
+
+---
+## 🧪 Technical Details
+
+### 🔧 {CODEX FILL TITLE}
+
+{CODEX FILL TWO-SENTENCE BRIEF TECHNICAL EXPLANATION OF DESIGN OF APPLICATION}
+
+![Screenshot](https://blog.maaz.sh/git-to-dev.png)
+
+{CODEX FILL SOME INTERESTING DETAIL ABOUT THIS PROJECT}
+
+---
+## 🔮 Future
+
+{CODEX PUT TWO BULLET POINTS ABOUT WHAT FEATURES COULD BE ADDED TO THIS OR OTHER USE-CASES}
