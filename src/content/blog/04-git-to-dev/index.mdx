@@ -21,6 +21,9 @@ With [git-to.dev](https://github.com/maazghani/git-to.dev) you can just go to [g
 ## Use Case B: Fuzzy URL shortening
 Instead of putting this URL in a tinyURL to shorten it, and end up with an obscure URL that could end up anywhere, you can also just infer the shortest URL by trying `https://git-to.dev/oai/cx`, and since the repo with the most stars that most closely matches the unique chars `oai/cx` is github.com/openai/codex it will automatically redirect there. URL Shortening without a URL shortener. 
 
+## Use Case C: Preview and find the shortest link
+You don't have to guess and immediately follow a fuzzy URL. On the [git-to.dev](https://git-to.dev) website, you can enter a candidate path to pre-resolve it, inspect the repository it matches, and see other possible matches before opening anything. You can also paste a full GitHub repository URL into the shortener and have the site work backward to find the shortest `git-to.dev` URL that still resolves to that exact repository.
+
 ## How Matching Works
 
 1. Owners first. Candidates come from an exact login lookup, GitHub's user index, and a cached pool of the most-starred owners.
