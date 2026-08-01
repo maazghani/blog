@@ -1,0 +1,49 @@
+---
+title: "Introducing git-to.dev: search github via shortened URLs"
+description: "Fuzzy expander and searcher for Github URLs"
+date: "2026-8-01"
+tags:
+  - vercel
+  - github
+  - nextjs
+  - ai
+  - redirect
+---
+
+---
+
+## github.com/owner/repo
+Most of the time you can find a repo just by assuming what it's path might be, for example, you know Codex is created by OpenAI, so right now instead of Googling for `"codex github"` you may just browse to `"github.com/openai/codex"` and end up in the right place. 
+
+## Use Case A: Shorter, readable GitHub links  
+With [git-to.dev](https://github.com/maazghani/git-to.dev) you can just go to [git-to.dev/openai/codex](https://github.com/openai/codex) and end up in the right place, with a shorter url. 
+
+## Use Case B: Fuzzy URL shortening
+Instead of putting this URL in a tinyURL to shorten it, and end up with an obscure URL that could end up anywhere, you can also just infer the shortest URL by trying `https://git-to.dev/oai/cx`, and since the repo with the most stars that most closely matches the unique chars `oai/cx` is github.com/openai/codex it will automatically redirect there. URL Shortening without a URL shortener. 
+
+## Use Case C: Preview and find the shortest link
+You don't have to guess and immediately follow a fuzzy URL. On the [git-to.dev](https://git-to.dev) website, you can enter a candidate path to pre-resolve it, inspect the repository it matches, and see other possible matches before opening anything. You can also paste a full GitHub repository URL into the shortener and have the site work backward to find the shortest `git-to.dev` URL that still resolves to that exact repository.
+
+## How Matching Works
+
+1. Owners first. Candidates come from an exact login lookup, GitHub's user index, and a cached pool of the most-starred owners.
+2. Whole pairs are scored. Both halves are matched together, so a weaker-looking owner still wins when it holds the tighter repo match.
+3. Tightest, then shortest. Match quality ranks first, then fewest total characters. Stars only break an exact tie.
+4. Extra segments pass through. /maaz/ks/tree/main lands on that branch, and ?preview=1 shows the resolution instead of redirecting.
+
+---
+## 🧪 Technical Details
+
+### 🔧 A fuzzy resolver built on Next.js and GitHub
+
+The application is built with the Next.js App Router and uses the GitHub REST API to discover possible owners and repositories. It scores the owner and repo as a pair—ranking exact, prefix, substring, and subsequence matches—then redirects to the strongest result while preserving any extra path segments.
+
+![Screenshot](/git-to-dev.png)
+
+The fun part is that the resolver works in both directions: it can expand a fuzzy path such as `oai/cx`, but it can also search for the shortest path that still resolves unambiguously to a specific repository. Results are cached to reduce GitHub API calls, and adding `?preview=1` lets you inspect a match before following the redirect.
+
+---
+## 🔮 Future
+
+- Add browser and editor extensions that generate the shortest `git-to.dev` link directly from the GitHub page you are viewing.
+- Support links to issues, pull requests, releases, and files while preserving the same fuzzy owner/repository matching.
