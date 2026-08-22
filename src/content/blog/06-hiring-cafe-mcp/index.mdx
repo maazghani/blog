@@ -1,0 +1,38 @@
+---
+title: "an MCP server for hiring.cafe"
+description: "A simple MCP for delivering job results from https://hiring.cafe"
+date: "2026-8-22"
+tags:
+  - mcp
+  - chat-gpt
+  - hiring
+  - jobs
+---
+
+---
+
+## 🔍 y tho
+
+I created a create-mcp-server based off of AWS well-architected patterns for MCPs (preventing tool sprawl etc) and wanted to test it out. Also, I couldn't find an MCP server for [hiring.cafe](https://hiring.cafe).
+
+
+## what
+
+I still struggle with when is it sufficient to have LLMs just scrape the web browser with `curl` or when an MCP makes sense, but to try it out I created a simple HiringCafe MCP that has 4 simple tools. One of the factors I was trying to understand is whether providing more details in the tool is more efficient, or if giving it a summarized view with the option of fetching the specific one. I will be testing both.
+
+- `search_jobs`: search listings by the common filters, query/location into a set of normalized job results
+- `get_job`: get a single jobs details
+- `search`: `search_jobs` but a summarized view for ChatGPT
+- `fetch`: `get_job` but summarized view
+
+In addition to the main streamable-http MCP endpoint `/api/mcp`, there is also an /api/healthz endpoint that acts as a liveness probe.
+
+![Landing Page](/hiring-cafe-mcp.png)
+
+![In-Use](/hiring-cafe-mcp-2.png)
+
+## try it out
+
+https://hiring-mcp.cafe
+
+---
